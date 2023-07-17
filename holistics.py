@@ -13,6 +13,7 @@ class HandTrack:
     SCROLL_START = [0, 1, 1, 1, 1]
     SCROLL_END = [0, 1, 1, 0, 1]
     prev_gesture = []
+    right_prev_gesture = []
     lt_timer = 0
 
     def __init__(self, mindetectconf=0.5, mintrackconf=0.5):
@@ -77,20 +78,20 @@ class HandTrack:
             cv2.putText(self.image, 'Left', (bbox[0] - 30, bbox[1] - 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 51),
                         1)
             cv2.rectangle(self.image, (bbox[0] - 15, bbox[1] - 15), (bbox[2] + 15, bbox[3] + 15), (255, 255, 51), 1)
-            enc = self.__get_lm_list(left_handf_coordinate, 'left')
+            left_enc = self.__get_lm_list(left_handf_coordinate, 'left')
 
             xcord = int(np.mean([left_handf_coordinate[8][0], left_handf_coordinate[12][0]]))
             ycord = int(np.mean([left_handf_coordinate[8][1], left_handf_coordinate[12][1]]))
             xcord = np.interp(xcord, [0, self.w], [0, self.width + 400])
             ycord = np.interp(ycord, [0, self.h], [0, self.height + 400])
 
-            if enc == HandTrack.MOVE_CURSOR_CONN:
+            if left_enc == HandTrack.MOVE_CURSOR_CONN:
                 cv2.putText(self.image, 'Move', (self.w - 100, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
                             cv2.LINE_AA)
                 t1 = threading.Thread(target=self.__moveThread, args=[xcord, ycord])
                 t1.start()
 
-            if enc == HandTrack.LT_CLICK_CURSOR_CONN:
+            if left_enc == HandTrack.LT_CLICK_CURSOR_CONN:
                 if HandTrack.lt_timer == 0:
                     cv2.putText(self.image, 'Click', (self.w - 100, 55), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
                                 cv2.LINE_AA)
@@ -99,12 +100,12 @@ class HandTrack:
                     t2.start()
                     HandTrack.lt_timer = 5
 
-            if enc == HandTrack.SCROLL_START:
+            if left_enc == HandTrack.SCROLL_START:
                 HandTrack.prev_gesture = HandTrack.SCROLL_START
                 cv2.putText(self.image, 'Scroll', (self.w - 100, 85), cv2.FONT_HERSHEY_SIMPLEX, 1, (51, 255, 255), 2,
                             cv2.LINE_AA)
 
-            if (HandTrack.prev_gesture == HandTrack.SCROLL_START) and (enc == HandTrack.SCROLL_END):
+            if (HandTrack.prev_gesture == HandTrack.SCROLL_START) and (left_enc == HandTrack.SCROLL_END):
                 HandTrack.prev_gesture = []
                 cv2.putText(self.image, 'Scroll', (self.w - 100, 85), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
                             cv2.LINE_AA)
@@ -116,18 +117,19 @@ class HandTrack:
             cv2.putText(self.image, 'Right', (bbox[0] - 30, bbox[1] - 30), cv2.FONT_HERSHEY_COMPLEX, 0.5,
                         (255, 255, 51), 1)
             cv2.rectangle(self.image, (bbox[0] - 15, bbox[1] - 15), (bbox[2] + 15, bbox[3] + 15), (255, 255, 51), 1)
-            enc = self.__get_lm_list(right_handf_coordinate, 'right')
-            if enc == HandTrack.SCROLL_END:
-                HandTrack.prev_gesture = HandTrack.SCROLL_END
+            right_enc = self.__get_lm_list(right_handf_coordinate, 'right')
+
+            if right_enc == HandTrack.SCROLL_END:
+                HandTrack.right_prev_gesture = HandTrack.SCROLL_END
                 cv2.putText(self.image, 'Scroll', (self.w - 100, 85), cv2.FONT_HERSHEY_SIMPLEX, 1, (51, 255, 255), 2,
                             cv2.LINE_AA)
 
-            if (HandTrack.prev_gesture == HandTrack.SCROLL_END) and (enc == HandTrack.SCROLL_START):
-                HandTrack.prev_gesture = []
+            if (HandTrack.right_prev_gesture == HandTrack.SCROLL_END) and (right_enc == HandTrack.SCROLL_START):
+                HandTrack.right_prev_gesture = []
                 cv2.putText(self.image, 'Scroll', (self.w - 100, 85), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
                             cv2.LINE_AA)
-                t3 = threading.Thread(target=self.__scrollThread, args=[900])
-                t3.start()
+                t4 = threading.Thread(target=self.__scrollThread, args=[900])
+                t4.start()
 
     def __moveThread(self, xcord, ycord):
         py.moveTo(xcord, ycord, 0, py.easeOutQuad)
